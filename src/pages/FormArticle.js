@@ -1,36 +1,59 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {collection, addDoc} from 'firebase/firestore';
-import {db} from '../firebase/config'
-// styles
-import './create.css'
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import './formArticle.css';
 
-export default function Create() {  
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [description, setDescription] = useState('')
+export default function FormArticle() {  
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [description, setDescription] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   
-  const navigate = useNavigate()
-  
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    if (id) {
+      const ref = doc(db, 'articles', id);
+      getDoc(ref).then((doc) => {
+        if (doc.exists()) {
+          const data = doc.data();
+          setTitle(data.title);
+          setAuthor(data.author);
+          setDescription(data.description);
+          setIsEditing(true);
+        } else {
+          console.error("No such document!");
+        }
+      }).catch((error) => {
+        console.error("Error getting document:", error);
+      });
+    }
+  }, [id]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()   
-    const article = {title,author,description};
-    const ref = collection(db, 'articles')
-    await addDoc(ref,article)
+    e.preventDefault();   
+    const article = { title, author, description };
 
-    // setTitle("");
-    // setAuthor("");
-    // setDescription("");
-
-    navigate('/')
-  }
+    try {
+      if (isEditing) {
+        const ref = doc(db, 'articles', id);
+        await updateDoc(ref, article);
+      } else {
+        const ref = collection(db, 'articles');
+        await addDoc(ref, article);
+      }
+      navigate('/');
+    } catch (error) {
+      console.error("Error saving document:", error);
+    }
+  };
 
   return (
-    <div className="create">
-      <h2 className="page-title">Add a New Recipe</h2>
+    <div className="form-article">
+      <h2 className="page-title">{isEditing ? 'Edit Article' : 'Add a New Article'}</h2>
       <form onSubmit={handleSubmit}>
-
         <label>
           <span>Title:</span>
           <input 
@@ -40,7 +63,6 @@ export default function Create() {
             required
           />
         </label>
-        
         <label>
           <span>Author:</span>
           <input 
@@ -50,7 +72,6 @@ export default function Create() {
             required
           />
         </label>
-
         <label>
           <span>Description:</span>
           <textarea 
@@ -59,9 +80,8 @@ export default function Create() {
             required
           />
         </label>
-
-        <button className="btn">submit</button>
+        <button className="btn">Submit</button>
       </form>
     </div>
-  )
+  );
 }
