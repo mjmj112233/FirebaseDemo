@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Article from './pages/Article';
 import FormArticle from './pages/FormArticle';
 import Login from './pages/Login';
+import ProtectedRoute from './ProtectedRoute';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -53,8 +54,8 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/articles/:urlId" element={<Article />} />
-          <Route path="/new" element={<FormArticle />} />
-          <Route path="/edit/:id" element={<FormArticle />} />
+          <Route path="/new" element={<ProtectedRoute user={user}><FormArticle /></ProtectedRoute>} />
+          <Route path="/edit/:id" element={<ProtectedRoute user={user}><FormArticle /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/*" element={<Navigate to="/" />} />
         </Routes>
